@@ -20,6 +20,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
 import { ProjectData, ProjectCalculations, Project } from '../types';
 import { generateProjectPDF } from '../lib/pdfGenerator';
+import { saveProject as saveProjectData, updateProject as updateProjectData } from '../lib/data';
 
 const steps = [
   { id: 'client', label: 'Cliente', icon: User },
@@ -80,24 +81,15 @@ export default function ProjectWizard({ onComplete, onCancel, project }: { onCom
         data: formData,
         calculations: calculations
       };
-      await fetch(`/api/projects/${project.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
+      await updateProjectData(project.id, payload as any);
     } else {
       const newProject = {
-        id: `PRJ-${Date.now()}`,
         clientId: 'user-1',
         status: 'draft',
         data: formData,
         calculations: calculations
       };
-      await fetch('/api/projects', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newProject)
-      });
+      await saveProjectData(newProject as any);
     }
     onComplete();
   };

@@ -25,18 +25,17 @@ import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
 import * as XLSX from 'xlsx';
 import { generateProjectPDF } from '../lib/pdfGenerator';
+import { getProject as getProjectData } from '../lib/data';
 
 export default function ProjectDetail({ id, onBack, onEdit }: { id: string, onBack: () => void, onEdit: () => void }) {
   const [project, setProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(`/api/projects/${id}`)
-      .then(res => res.json())
-      .then(data => {
-        setProject(data);
-        setLoading(false);
-      });
+    getProjectData(id).then(data => {
+      setProject(data);
+      setLoading(false);
+    });
   }, [id]);
 
   const handleDownloadPDF = () => {

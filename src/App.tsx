@@ -28,6 +28,7 @@ import ProjectDetail from './components/ProjectDetail';
 import EquipmentCatalog from './components/EquipmentCatalog';
 import UserManual from './components/UserManual';
 import { generateProjectPDF } from './lib/pdfGenerator';
+import { listProjects as listProjectsData, updateProject as updateProjectData, deleteProject as deleteProjectData } from './lib/data';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<'dashboard' | 'projects' | 'equipment' | 'help'>('dashboard');
@@ -268,12 +269,10 @@ function ProjectList({ onView }: { onView: (id: string) => void }) {
   };
 
   useEffect(() => {
-    fetch('/api/projects')
-      .then(res => res.json())
-      .then(data => {
-        setProjects(data);
-        setLoading(false);
-      });
+    listProjectsData().then(data => {
+      setProjects(data);
+      setLoading(false);
+    });
   }, []);
   
   const startEdit = (p: Project) => {
@@ -302,11 +301,7 @@ function ProjectList({ onView }: { onView: (id: string) => void }) {
       },
       calculations: p.calculations
     };
-    await fetch(`/api/projects/${p.id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(updated)
-    });
+    await updateProjectData(p.id, updated as any);
     setProjects(prev => prev.map(x => x.id === p.id ? { ...x, ...updated } as Project : x));
     setEditingId(null);
   };
@@ -317,8 +312,7 @@ function ProjectList({ onView }: { onView: (id: string) => void }) {
     const ok = window.confirm(`¿Eliminar el proyecto "${name}"? Esta acción no se puede deshacer.`);
     if (!ok) return;
     try {
-      const res = await fetch(`/api/projects/${id}`, { method: 'DELETE' });
-      if (!res.ok) throw new Error('Error al eliminar');
+      await deleteProjectData(id);
       setProjects(prev => prev.filter(x => x.id !== id));
       showToast('Proyecto eliminado', 'success');
     } catch {

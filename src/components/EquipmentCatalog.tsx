@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { Equipment } from '../types';
 import { cn } from '../lib/utils';
+import { listEquipment, saveEquipment, updateEquipment, deleteEquipment } from '../lib/data';
 
 export default function EquipmentCatalog() {
   const [equipment, setEquipment] = useState<Equipment[]>([]);
@@ -40,12 +41,10 @@ export default function EquipmentCatalog() {
   };
 
   const loadEquipment = () => {
-    fetch('/api/equipment')
-      .then(res => res.json())
-      .then(data => {
-        setEquipment(data);
-        setLoading(false);
-      });
+    listEquipment().then(data => {
+      setEquipment(data);
+      setLoading(false);
+    });
   };
   useEffect(() => {
     loadEquipment();
@@ -93,32 +92,22 @@ export default function EquipmentCatalog() {
     try { especificaciones = JSON.parse(form.especificaciones || '{}'); } catch { especificaciones = {}; }
     if (editing) {
       try {
-        const res = await fetch(`/api/equipment/${editing.id}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            category: form.category, marca: form.marca, modelo: form.modelo,
-            especificaciones, costo: Number(form.costo), precioVenta: Number(form.precioVenta),
-            moneda: form.moneda, disponible: !!form.disponible
-          })
-        });
-        if (!res.ok) throw new Error();
+        await updateEquipment(editing.id, { 
+          category: form.category, marca: form.marca, modelo: form.modelo,
+          especificaciones, costo: Number(form.costo), precioVenta: Number(form.precioVenta),
+          moneda: form.moneda, disponible: !!form.disponible
+        } as any);
         showToast('Equipo actualizado', 'success');
       } catch {
         showToast('Error al actualizar equipo', 'error');
       }
     } else {
       try {
-        const res = await fetch('/api/equipment', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            category: form.category, marca: form.marca, modelo: form.modelo,
-            especificaciones, costo: Number(form.costo), precioVenta: Number(form.precioVenta),
-            moneda: form.moneda, disponible: !!form.disponible
-          })
-        });
-        if (!res.ok) throw new Error();
+        await saveEquipment({ 
+          category: form.category, marca: form.marca, modelo: form.modelo,
+          especificaciones, costo: Number(form.costo), precioVenta: Number(form.precioVenta),
+          moneda: form.moneda, disponible: !!form.disponible
+        } as any);
         showToast('Equipo agregado', 'success');
       } catch {
         showToast('Error al agregar equipo', 'error');
@@ -133,8 +122,7 @@ export default function EquipmentCatalog() {
     const ok = window.confirm(`¿Eliminar el equipo "${label}"? Esta acción no se puede deshacer.`);
     if (!ok) return;
     try {
-      const res = await fetch(`/api/equipment/${id}`, { method: 'DELETE' });
-      if (!res.ok) throw new Error();
+      await deleteEquipment(id);
       showToast('Equipo eliminado', 'success');
       loadEquipment();
     } catch {
